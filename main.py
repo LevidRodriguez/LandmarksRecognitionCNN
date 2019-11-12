@@ -25,5 +25,4 @@ if __name__ == "__main__":
     IMAGE_1_JPG = 'DJI_0816.JPG'
     IMAGE_2_JPG = 'DJI_0817.JPG'
     show_images([IMAGE_1_JPG, IMAGE_2_JPG])
-    
     pass
