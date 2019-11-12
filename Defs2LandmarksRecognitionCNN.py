@@ -28,3 +28,11 @@ def show_images(image_path_list):
         plt.yticks([])
         plt.xticks([])
     plt.show()
+
+def image_input_fn(image_files):
+    filename_queue = tf.train.string_input_producer(
+        image_files, shuffle=False)
+    reader = tf.WholeFileReader()
+    _, value = reader.read(filename_queue)
+    image_tf = tf.image.decode_jpeg(value, channels=3)
+    return tf.image.convert_image_dtype(image_tf, tf.float32)

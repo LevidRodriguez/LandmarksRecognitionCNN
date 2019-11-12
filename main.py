@@ -24,5 +24,6 @@ if __name__ == "__main__":
     np.random.seed(10)
     IMAGE_1_JPG = 'DJI_0816.JPG'
     IMAGE_2_JPG = 'DJI_0817.JPG'
-    show_ima
+    show_images([IMAGE_1_JPG, IMAGE_2_JPG])
+    
     pass
