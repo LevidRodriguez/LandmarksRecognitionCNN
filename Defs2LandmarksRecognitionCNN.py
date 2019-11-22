@@ -36,3 +36,58 @@ def image_input_fn(image_files):
     _, value = reader.read(filename_queue)
     image_tf = tf.image.decode_jpeg(value, channels=3)
     return tf.image.convert_image_dtype(image_tf, tf.float32)
+
+def match_images(results_dict, image_1_path, image_2_path):
+    distance_threshold = 0.8
+
+    # Read features.
+    locations_1, descriptors_1 = results_dict[image_1_path]
+    num_features_1 = locations_1.shape[0]
+    print("Loaded image 1's %d features" % num_features_1)
+    locations_2, descriptors_2 = results_dict[image_2_path]
+    num_features_2 = locations_2.shape[0]
+    print("Loaded image 2's %d features" % num_features_2)
+
+    # Find nearest-neighbor matches using a KD tree.
+    d1_tree = cKDTree(descriptors_1)
+    _, indices = d1_tree.query(
+        descriptors_2, distance_upper_bound=distance_threshold)
+
+  # Select feature locations for putative matches.
+    locations_2_to_use = np.array([
+        locations_2[i,]
+        for i in range(num_features_2)
+        if indices[i] != num_features_1
+    ])
+    locations_1_to_use = np.array([
+        locations_1[indices[i],]
+        for i in range(num_features_2)
+        if indices[i] != num_features_1
+    ])
+
+  # Perform geometric verification using RANSAC.
+    _, inliers = ransac(
+        (locations_1_to_use, locations_2_to_use),
+        AffineTransform,
+        min_samples=3,
+        residual_threshold=20,
+        max_trials=1000)
+    # the number of inliers as the score for retrieved images.
+    print('Found %d inliers' % sum(inliers))
+
+    # Visualize correspondences.
+    _, ax = plt.subplots()
+    img_1 = mpimg.imread(image_1_path)
+    img_2 = mpimg.imread(image_2_path)
+    inlier_idxs = np.nonzero(inliers)[0]
+    plot_matches(
+        ax,
+        img_1,
+        img_2,
+        locations_1_to_use,
+        locations_2_to_use,
+        np.column_stack((inlier_idxs, inlier_idxs)),
+        matches_color='b')
+    ax.axis('off')
+    ax.set_title('DELF correspondences')
+    plt.show()

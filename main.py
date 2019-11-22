@@ -42,4 +42,14 @@ if __name__ == "__main__":
     module_outputs = m(module_inputs, as_dict=True)
 
     image_tf = image_input_fn([IMAGE_1_JPG, IMAGE_2_JPG])
+    with tf.train.MonitoredSession() as sess:
+        results_dict = {}  # Stores the locations and their descriptors for each image
+        for image_path in [IMAGE_1_JPG, IMAGE_2_JPG]:
+            image = sess.run(image_tf)
+            print('Extracting locations and descriptors from %s' % image_path)
+            results_dict[image_path] = sess.run(
+                [module_outputs['locations'], module_outputs['descriptors']],
+                feed_dict={image_placeholder: image})
+    
+    match_images(results_dict, IMAGE_1_JPG, IMAGE_2_JPG)
     pass
